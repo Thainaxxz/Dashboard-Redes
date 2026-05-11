@@ -7,17 +7,12 @@
     <title>NMS Dashboard — MikroTik</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="dashboard.css">
-    <!-- CORRIGIDO: tag <link> estava quebrada (só tinha `<link rel` sem fechar) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
 
-<body>
-    <!-- CORRIGIDO: caminho era "src/constants/networkData.js" mas o arquivo fica na raiz -->
-    
-
+<body> 
     <div style="display:flex; min-height:100vh;">
 
-        <!-- SIDEBAR -->
         <aside
             style="width:220px; flex-shrink:0; background:var(--mk-surface); border-right:1px solid var(--mk-border); display:flex; flex-direction:column; padding:0 12px 20px;">
             <div style="padding:18px 4px 16px; border-bottom:1px solid var(--mk-border); margin-bottom:12px;">
@@ -167,10 +162,8 @@
                 </div>
             </div>
 
-            <!-- VPN + VLAN SECTION -->
             <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:20px;">
 
-                <!-- VPN Card -->
                 <section>
                     <div class="section-title">WireGuard VPN</div>
                     <article class="card" style="padding:16px;">
@@ -217,20 +210,17 @@
                     </article>
                 </section>
 
-                <!-- VLAN Cards -->
                 <section>
                     <div class="section-title">Monitor de VLANs</div>
                     <div style="display:grid; gap:12px;" id="vlanContainer"></div>
                 </section>
             </div>
 
-            <!-- CHARTS ROW -->
             <section style="margin-bottom:20px;">
                 <div class="section-title">Tráfego de Banda — Últimos 10 minutos</div>
                 <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;" id="chartsContainer"></div>
             </section>
 
-            <!-- DEVICES TABLE -->
             <section style="margin-bottom:20px;">
                 <div class="section-title">Dispositivos na Bancada — DHCP Leases</div>
                 <article class="card" style="overflow:hidden;">
@@ -250,7 +240,6 @@
                 </article>
             </section>
 
-            <!-- SYSTEM LOGS -->
             <section>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                     <div class="section-title" style="margin:0;">Logs do Sistema — MikroTik</div>
@@ -316,18 +305,14 @@
             const chart = charts[vlanId];
             if (!chart) return;
 
-    // Remove o dado mais antigo (primeiro da array)
             chart.data.datasets[0].data.shift();
             chart.data.datasets[1].data.shift();
 
-    // Adiciona o novo dado (rx e tx) no final da array
             chart.data.datasets[0].data.push(rx);
             chart.data.datasets[1].data.push(tx);
 
-    // Atualiza os contadores de texto no card
-    // Você vai precisar adicionar IDs nesses spans de texto para o JS achá-los facilmente
 
-            chart.update('none'); // Atualiza sem animação para não piscar
+            chart.update('none'); 
 }
 
         function renderVlanCards(vlans) {
@@ -398,7 +383,6 @@
             document.getElementById('vpnBadge').className = online ? 'badge-online' : 'badge-offline';
             document.getElementById('vpnBadge').textContent = online ? '● Online' : '○ Offline';
             document.getElementById('vpnIp').textContent = vpn.tunnelIp || '—';
-            // CORRIGIDO: campos opcionais agora têm fallback para não mostrar "undefined"
             document.getElementById('vpnEndpoint').textContent = vpn.endpoint || 'N/A';
             document.getElementById('vpnHandshake').textContent = vpn.lastHandshake ? `${vpn.lastHandshake}s atrás` : vpn.rxBytes || '—';
             document.getElementById('vpnPeers').textContent = vpn.peers != null ? `${vpn.peers} peer(s)` : '—';
@@ -417,7 +401,6 @@
             document.getElementById('activeVlans').textContent = activeV;
             document.getElementById('globalStatus').className = 'badge-online';
             document.getElementById('globalStatus').textContent = '● Rede Operacional';
-            // Dentro da renderTopStats no JS:
             const hasAlert = highestTraffic && highestTraffic.rx > 50;
             document.getElementById('alertCount').textContent = hasAlert ? '1' : '0';
             document.getElementById('alertText').textContent = hasAlert ? `VLAN ${highestTraffic.id} — tráfego elevado` : 'Nenhum alerta';
@@ -434,12 +417,10 @@
             return new Date().toLocaleTimeString('pt-BR');
         }
 
-        // CORRIGIDO: logs reais do MikroTik agora são renderizados quando disponíveis
         function renderRealLogs(logs) {
             if (!logs || logs.length === 0) return;
             const area = document.getElementById('logArea');
 
-            // Limpa a área antes de renderizar os novos logs para evitar duplicação
             area.innerHTML = '';
 
             logs.forEach(log => {
@@ -457,7 +438,6 @@
                 area.appendChild(line);
             });
             
-            // Rola sempre para o final
             area.scrollTop = area.scrollHeight;
         }
 
@@ -471,7 +451,6 @@
 
 
         window.onload = loadRealData;
-        // Atualiza automaticamente a cada 5 segundos
         setInterval(loadRealData, 5000);
     </script>
 
@@ -495,7 +474,6 @@ async function loadRealData() {
 
         const data = await response.json();
 
-        // TRATA ERRO DA API
         if (data.error) {
             console.error("Erro API:", data.error);
 
@@ -504,12 +482,10 @@ async function loadRealData() {
             return;
         }
 
-        // Sincroniza dados
         for (let key in data) {
             NETWORK_DATA[key] = data[key];
         }
 
-        // Render
         renderRouterInfo(data.router);
         renderVpn(data.vpn);
         renderVlanCards(data.vlans);
@@ -518,7 +494,6 @@ async function loadRealData() {
 
         updateTime();
 
-        // Charts
         if (data.vlans) {
 
             data.vlans.forEach(v => {
@@ -533,7 +508,6 @@ async function loadRealData() {
             });
         }
 
-        // Logs
         if (data.logs) {
             renderRealLogs(data.logs);
         }

@@ -40,11 +40,11 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 14px;
-            min-height: 250px; /* Garante que o espaço já esteja reservado */
+            min-height: 250px; 
 }
 
         .card canvas {
-            max-height: 150px; /* Limita a altura do gráfico para não expandir o card */
+            max-height: 150px;
         }
 
         .card {
