@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NMS Dashboard — MikroTik</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- CORRIGIDO: tag <link> estava quebrada (só tinha `<link rel` sem fechar) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+
+<body>
+    <!-- CORRIGIDO: caminho era "src/constants/networkData.js" mas o arquivo fica na raiz -->
+    
+
+    <div style="display:flex; min-height:100vh;">
+
+        <!-- SIDEBAR -->
+        <aside
+            style="width:220px; flex-shrink:0; background:var(--mk-surface); border-right:1px solid var(--mk-border); display:flex; flex-direction:column; padding:0 12px 20px;">
+            <div style="padding:18px 4px 16px; border-bottom:1px solid var(--mk-border); margin-bottom:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div
+                        style="width:32px; height:32px; background:#0078d4; border-radius:7px; display:flex; align-items:center; justify-content:center;">
+                        <svg width="18" height="18" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24">
+                            <path
+                                d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div style="font-weight:600; font-size:13px; color:#e6edf3;">MikroTik NMS</div>
+                        <div style="font-size:11px; color:#8b949e;">Div Info - Divinópolis MG</div>
+                    </div>
+                </div>
+            </div>
+
+            <nav style="display:flex; flex-direction:column; gap:2px; flex:1;">
+                <div
+                    style="font-size:10px; font-weight:600; color:var(--mk-muted); padding:8px 12px 4px; letter-spacing:.08em; text-transform:uppercase;">
+                    Visão Geral</div>
+                <a class="active">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="7" height="7" rx="1" />
+                        <rect x="14" y="3" width="7" height="7" rx="1" />
+                        <rect x="3" y="14" width="7" height="7" rx="1" />
+                        <rect x="14" y="14" width="7" height="7" rx="1" />
+                    </svg>
+                    Dashboard
+                </a>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path
+                            d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01" />
+                    </svg>
+                    Interfaces
+                </a>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <ellipse cx="12" cy="5" rx="9" ry="3" />
+                        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                    </svg>
+                    VLANs
+                </a>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="2" y="7" width="20" height="14" rx="2" />
+                        <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" />
+                    </svg>
+                    Dispositivos
+                </a>
+                <div
+                    style="font-size:10px; font-weight:600; color:var(--mk-muted); padding:14px 12px 4px; letter-spacing:.08em; text-transform:uppercase;">
+                    Segurança</div>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                    Firewall
+                </a>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <rect x="2" y="3" width="20" height="14" rx="2" />
+                        <path d="M8 21h8M12 17v4" />
+                    </svg>
+                    VPN / WireGuard
+                </a>
+                <a>
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+                    </svg>
+                    Logs
+                </a>
+            </nav>
+
+            <!-- Router Info -->
+            <div
+                style="margin-top:auto; padding:12px; background:#0d1117; border-radius:8px; border:1px solid var(--mk-border);">
+                <div style="font-size:11px; color:var(--mk-muted); margin-bottom:8px; font-weight:500;">ROTEADOR</div>
+                <div style="font-size:12px; color:#60aaff; font-weight:500;" id="routerModel"></div>
+                <div style="font-size:11px; color:var(--mk-muted); margin-top:4px;" id="routerVersion"></div>
+                <div style="margin-top:10px;">
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;"><span
+                            style="color:var(--mk-muted)">CPU</span><span id="cpuVal"></span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpuBar" style="background:#3b82f6;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; margin:6px 0 4px;"><span
+                            style="color:var(--mk-muted)">Memória</span><span id="memVal"></span></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memBar" style="background:#8b5cf6;"></div>
+                    </div>
+                    <div
+                        style="font-size:11px; color:var(--mk-muted); margin-top:8px; display:flex; justify-content:space-between;">
+                        <span>Uptime</span><span id="uptimeVal" style="color:var(--mk-text);"></span></div>
+                    <div
+                        style="font-size:11px; color:var(--mk-muted); margin-top:4px; display:flex; justify-content:space-between;">
+                        <span>Temp.</span><span id="tempVal" style="color:#f59e0b;"></span></div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main style="flex:1; overflow:auto; padding:20px 24px;">
+
+            <!-- Header -->
+            <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div>
+                    <h1 style="font-size:18px; font-weight:600; color:#e6edf3;">Network Monitoring System</h1>
+                    <p style="font-size:12px; color:var(--mk-muted); margin-top:2px;" id="headerTime"></p>
+                </div>
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <span id="globalStatus"
+                        style="font-size:12px; padding:4px 12px; border-radius:20px; font-weight:500;"></span>
+
+                    <button onclick="loadRealData()"
+                        style="background:rgba(0,120,212,.15); border:1px solid rgba(0,120,212,.3); color:#60aaff; padding:6px 14px; border-radius:7px; font-size:12px; cursor:pointer;">
+                        ↻ Atualizar
+                    </button>
+                </div>
+            </header>
+
+            <!-- TOP STATS ROW -->
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;">
+                <div class="card" style="padding:14px 16px;">
+                    <div class="stat-label">Total Dispositivos</div>
+                    <div class="stat-value" style="color:#3b82f6;" id="totalDevices"></div>
+                    <div style="font-size:11px; color:var(--mk-muted); margin-top:4px;" id="onlineDevices"></div>
+                </div>
+                <div class="card" style="padding:14px 16px;">
+                    <div class="stat-label">Tráfego Total</div>
+                    <div class="stat-value" style="color:#23c55e;" id="totalTraffic"></div>
+                    <div style="font-size:11px; color:var(--mk-muted); margin-top:4px;">Download agregado</div>
+                </div>
+                <div class="card" style="padding:14px 16px;">
+                    <div class="stat-label">VLANs Ativas</div>
+                    <div class="stat-value" style="color:#8b5cf6;" id="activeVlans"></div>
+                    <div style="font-size:11px; color:var(--mk-muted); margin-top:4px;"></div>
+                </div>
+                <div class="card" style="padding:14px 16px;">
+                    <div class="stat-label">Alertas</div>
+                    <div class="stat-value" style="color:#f59e0b;" id="alertCount"></div>
+                    <div style="font-size:11px; color:#f59e0b; margin-top:4px;"id="alertText"></div>
+                </div>
+            </div>
+
+            <!-- VPN + VLAN SECTION -->
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-bottom:20px;">
+
+                <!-- VPN Card -->
+                <section>
+                    <div class="section-title">WireGuard VPN</div>
+                    <article class="card" style="padding:16px;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                            <div>
+                                <div style="font-size:15px; font-weight:600; color:#e6edf3;">Túnel Principal</div>
+                                <div style="font-size:11px; color:var(--mk-muted); margin-top:2px;" id="vpnEndpoint">
+                                </div>
+                            </div>
+                            <span id="vpnBadge"
+                                style="font-size:11px; padding:3px 10px; border-radius:20px; font-weight:500;"></span>
+                        </div>
+                        <div style="display:grid; gap:10px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#0d1117; border-radius:7px;">
+                                <span style="color:var(--mk-muted); font-size:12px;">IP do Túnel</span>
+                                <span style="font-weight:500; color:#60aaff; font-family:monospace; font-size:13px;"
+                                    id="vpnIp"></span>
+                            </div>
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#0d1117; border-radius:7px;">
+                                <span style="color:var(--mk-muted); font-size:12px;">Último Handshake</span>
+                                <span style="font-weight:500; color:#23c55e; font-size:12px;" id="vpnHandshake"></span>
+                            </div>
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#0d1117; border-radius:7px;">
+                                <span style="color:var(--mk-muted); font-size:12px;">Peers Ativos</span>
+                                <span style="font-weight:500; color:#e6edf3; font-size:12px;" id="vpnPeers"></span>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <div
+                                    style="flex:1; padding:8px 12px; background:#0d1117; border-radius:7px; text-align:center;">
+                                    <div style="font-size:10px; color:var(--mk-muted);">↓ RX</div>
+                                    <div style="font-weight:600; color:#23c55e; font-size:13px;" id="vpnRx"></div>
+                                </div>
+                                <div
+                                    style="flex:1; padding:8px 12px; background:#0d1117; border-radius:7px; text-align:center;">
+                                    <div style="font-size:10px; color:var(--mk-muted);">↑ TX</div>
+                                    <div style="font-weight:600; color:#3b82f6; font-size:13px;" id="vpnTx"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- VLAN Cards -->
+                <section>
+                    <div class="section-title">Monitor de VLANs</div>
+                    <div style="display:grid; gap:12px;" id="vlanContainer"></div>
+                </section>
+            </div>
+
+            <!-- CHARTS ROW -->
+            <section style="margin-bottom:20px;">
+                <div class="section-title">Tráfego de Banda — Últimos 10 minutos</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px;" id="chartsContainer"></div>
+            </section>
+
+            <!-- DEVICES TABLE -->
+            <section style="margin-bottom:20px;">
+                <div class="section-title">Dispositivos na Bancada — DHCP Leases</div>
+                <article class="card" style="overflow:hidden;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hostname</th>
+                                <th>IP Address</th>
+                                <th>MAC Address</th>
+                                <th>VLAN</th>
+                                <th>Lease</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="devicesTable"></tbody>
+                    </table>
+                </article>
+            </section>
+
+            <!-- SYSTEM LOGS -->
+            <section>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div class="section-title" style="margin:0;">Logs do Sistema — MikroTik</div>
+                    <button onclick="clearLogs()"
+                        style="background:transparent; border:1px solid var(--mk-border); color:var(--mk-muted); padding:4px 12px; border-radius:6px; font-size:11px; cursor:pointer;">Limpar</button>
+                </div>
+                <article class="console-area" id="logArea">
+                    <div><span class="log-time">[--:--:--]</span> <span style="color:#4d5566;">Aguardando logs...</span>
+                    </div>
+                </article>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        const vlanColors = { 10: "#3b82f6", 20: "#8b5cf6", 30: "#f59e0b", 40: "#14b8a6" };
+        const charts = {};
+
+        function generateSparkData(base, variance = 20) {
+            return Array.from({ length: 10 }, () => Math.max(0, +(base + (Math.random() - 0.5) * variance).toFixed(1)));
+        }
+
+        function buildVlanChart(vlan) {
+            const labels = Array.from({ length: 10 }, (_, i) => `${i + 1}m`);
+            const rxData = generateSparkData(vlan.rx, 30);
+            const txData = generateSparkData(vlan.tx, 10);
+            const col = vlan.color;
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card';
+            wrapper.style.cssText = 'padding:14px 16px;';
+            wrapper.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <span style="font-size:13px;font-weight:600;color:#e6edf3;">VLAN ${vlan.id} — ${vlan.name}</span>
+        <span style="font-size:11px;color:${col};">▼${vlan.rx} / ▲${vlan.tx} ${vlan.rxUnit}</span>
+    </div>
+    <canvas id="chart-${vlan.id}" height="80"></canvas>`;
+            document.getElementById('chartsContainer').appendChild(wrapper);
+
+            const ctx = document.getElementById(`chart-${vlan.id}`).getContext('2d');
+            charts[vlan.id] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        { label: 'Download', data: rxData, borderColor: col, backgroundColor: col + '22', fill: true, tension: .4, pointRadius: 0, borderWidth: 2 },
+                        { label: 'Upload', data: txData, borderColor: '#4d5566', backgroundColor: 'transparent', fill: false, tension: .4, pointRadius: 0, borderWidth: 1.5, borderDash: [4, 3] }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.parsed.y} Mbps` } } },
+                    scales: {
+                        x: { grid: { color: '#1e2530' }, ticks: { color: '#4d5566', font: { size: 10 } } },
+                        y: { grid: { color: '#1e2530' }, ticks: { color: '#4d5566', font: { size: 10 }, callback: v => v + 'M' }, min: 0 }
+                    }
+                }
+            });
+        }
+
+        function updateChartsWithRealData(vlanId, rx, tx) {
+            const chart = charts[vlanId];
+            if (!chart) return;
+
+    // Remove o dado mais antigo (primeiro da array)
+            chart.data.datasets[0].data.shift();
+            chart.data.datasets[1].data.shift();
+
+    // Adiciona o novo dado (rx e tx) no final da array
+            chart.data.datasets[0].data.push(rx);
+            chart.data.datasets[1].data.push(tx);
+
+    // Atualiza os contadores de texto no card
+    // Você vai precisar adicionar IDs nesses spans de texto para o JS achá-los facilmente
+
+            chart.update('none'); // Atualiza sem animação para não piscar
+}
+
+        function renderVlanCards(vlans) {
+            const c = document.getElementById('vlanContainer');
+            c.innerHTML = '';
+            vlans.forEach(v => {
+                const pct = Math.min(100, (v.rx / 100) * 100);
+                const statusColor = v.status === 'ok' ? '#23c55e' : '#f59e0b';
+                const div = document.createElement('article');
+                div.className = 'card';
+                div.style.cssText = 'padding:14px 16px;';
+                div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+        <div>
+            <span style="font-size:12px;font-weight:600;color:#8b949e;letter-spacing:.04em;">VLAN ${v.id}</span>
+            <div style="font-size:15px;font-weight:600;color:#e6edf3;margin-top:2px;">${v.name}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <span style="width:8px;height:8px;border-radius:50%;background:${statusColor};display:inline-block;box-shadow:0 0 5px ${statusColor}55;"></span>
+            <span style="font-size:11px;color:var(--mk-muted);">${v.devices} devs</span>
+        </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:#0d1117;border-radius:6px;padding:7px 10px;">
+        <div style="font-size:10px;color:var(--mk-muted);">↓ Download</div>
+        <div style="font-size:16px;font-weight:600;color:#23c55e;">${v.rx} <span style="font-size:11px;color:#4d5566;">${v.rxUnit}</span></div>
+        </div>
+            <div style="background:#0d1117;border-radius:6px;padding:7px 10px;">
+            <div style="font-size:10px;color:var(--mk-muted);">↑ Upload</div>
+            <div style="font-size:16px;font-weight:600;color:#3b82f6;">${v.tx} <span style="font-size:11px;color:#4d5566;">${v.txUnit}</span></div>
+        </div>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${v.color};"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mk-muted);margin-top:4px;"><span>0 Mbps</span><span>100 Mbps</span></div>`;
+                c.appendChild(div);
+            });
+        }
+
+        function renderDevicesTable(devices) {
+            const tb = document.getElementById('devicesTable');
+            tb.innerHTML = devices.map(d => {
+                const online = d.status === 'online';
+                const vlanCol = vlanColors[d.vlan] || '#8b949e';
+                return `<tr>
+        <td style="font-family:monospace;color:#60aaff;font-size:12px;">${d.hostname}</td>
+        <td style="font-family:monospace;font-size:12px;">${d.ip}</td>
+        <td style="font-family:monospace;font-size:11px;color:var(--mk-muted);">${d.mac}</td>
+        <td><span style="background:${vlanCol}22;color:${vlanCol};border:1px solid ${vlanCol}44;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;">VLAN ${d.vlan}</span></td>
+        <td style="color:var(--mk-muted);font-size:12px;">${d.lease}</td>
+        <td><span class="${online ? 'badge-online' : 'badge-offline'}" style="padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;">${online ? '● Online' : '○ Offline'}</span></td>
+    </tr>`;
+            }).join('');
+        }
+
+        function renderRouterInfo(r) {
+            document.getElementById('routerModel').textContent = r.model;
+            document.getElementById('routerVersion').textContent = `RouterOS v${r.version}`;
+            document.getElementById('cpuVal').textContent = r.cpu + '%';
+            document.getElementById('cpuBar').style.width = r.cpu + '%';
+            document.getElementById('memVal').textContent = r.memory + '%';
+            document.getElementById('memBar').style.width = r.memory + '%';
+            document.getElementById('uptimeVal').textContent = r.uptime;
+            document.getElementById('tempVal').textContent = r.temp + '°C';
+        }
+
+        function renderVpn(vpn) {
+            const online = vpn.status === 'online';
+            document.getElementById('vpnBadge').className = online ? 'badge-online' : 'badge-offline';
+            document.getElementById('vpnBadge').textContent = online ? '● Online' : '○ Offline';
+            document.getElementById('vpnIp').textContent = vpn.tunnelIp || '—';
+            // CORRIGIDO: campos opcionais agora têm fallback para não mostrar "undefined"
+            document.getElementById('vpnEndpoint').textContent = vpn.endpoint || 'N/A';
+            document.getElementById('vpnHandshake').textContent = vpn.lastHandshake ? `${vpn.lastHandshake}s atrás` : vpn.rxBytes || '—';
+            document.getElementById('vpnPeers').textContent = vpn.peers != null ? `${vpn.peers} peer(s)` : '—';
+            document.getElementById('vpnRx').textContent = vpn.rxBytes || '—';
+            document.getElementById('vpnTx').textContent = vpn.txBytes || '—';
+        }
+
+        function renderTopStats(data) {
+            const total = data.devices.length;
+            const online = data.devices.filter(d => d.status === 'online').length;
+            const totalRx = data.vlans.reduce((a, v) => a + v.rx, 0).toFixed(1);
+            const activeV = data.vlans.filter(v => v.status !== 'down').length;
+            document.getElementById('totalDevices').textContent = total;
+            document.getElementById('onlineDevices').textContent = `${online} online / ${total - online} offline`;
+            document.getElementById('totalTraffic').textContent = totalRx + ' Mbps';
+            document.getElementById('activeVlans').textContent = activeV;
+            document.getElementById('globalStatus').className = 'badge-online';
+            document.getElementById('globalStatus').textContent = '● Rede Operacional';
+            // Dentro da renderTopStats no JS:
+            const hasAlert = highestTraffic && highestTraffic.rx > 50;
+            document.getElementById('alertCount').textContent = hasAlert ? '1' : '0';
+            document.getElementById('alertText').textContent = hasAlert ? `VLAN ${highestTraffic.id} — tráfego elevado` : 'Nenhum alerta';
+            const highestTraffic = [...data.vlans]
+                .sort((a, b) => b.rx - a.rx)[0];
+
+            document.getElementById('alertText').textContent =
+                highestTraffic && highestTraffic.rx > 50
+                    ? `VLAN ${highestTraffic.id} — tráfego elevado`
+                    : 'Nenhum alerta';
+        }
+
+        function nowStr() {
+            return new Date().toLocaleTimeString('pt-BR');
+        }
+
+        // CORRIGIDO: logs reais do MikroTik agora são renderizados quando disponíveis
+        function renderRealLogs(logs) {
+            if (!logs || logs.length === 0) return;
+            const area = document.getElementById('logArea');
+
+            // Limpa a área antes de renderizar os novos logs para evitar duplicação
+            area.innerHTML = '';
+
+            logs.forEach(log => {
+                const line = document.createElement('div');
+                const topic = log.topics || 'info';
+                const msg = log.message || JSON.stringify(log);
+                const time = log.time || nowStr();
+                
+                let cls = 'log-info';
+                if (topic.includes('warn')) cls = 'log-warn';
+                else if (topic.includes('error')) cls = 'log-err';
+                else if (topic.includes('ok') || topic.includes('info')) cls = 'log-ok';
+                
+                line.innerHTML = `<span class="log-time">[${time}]</span> <span class="${cls}">${topic}</span> ${msg}`;
+                area.appendChild(line);
+            });
+            
+            // Rola sempre para o final
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logArea').innerHTML = `<div><span class="log-time">[${nowStr()}]</span> <span style="color:#4d5566">— log limpo pelo operador —</span></div>`;
+        }
+
+        function updateTime() {
+            document.getElementById('headerTime').textContent = `Atualizado em: ${new Date().toLocaleString('pt-BR')}`;
+        }
+
+
+        window.onload = loadRealData;
+        // Atualiza automaticamente a cada 5 segundos
+        setInterval(loadRealData, 5000);
+    </script>
+
+
+<script>
+const NETWORK_DATA = {};
+async function loadRealData() {
+    console.log("Buscando dados no MikroTik...");
+
+    const btn = document.querySelector(
+        'button[onclick="loadRealData()"]'
+    );
+
+    if (btn) btn.innerText = "⌛ Aguarde...";
+
+    try {
+
+        const response = await fetch(
+            'http://localhost:8000/api/network-status'
+        );
+
+        const data = await response.json();
+
+        // TRATA ERRO DA API
+        if (data.error) {
+            console.error("Erro API:", data.error);
+
+            alert("Erro no backend:\n" + data.error);
+
+            return;
+        }
+
+        // Sincroniza dados
+        for (let key in data) {
+            NETWORK_DATA[key] = data[key];
+        }
+
+        // Render
+        renderRouterInfo(data.router);
+        renderVpn(data.vpn);
+        renderVlanCards(data.vlans);
+        renderDevicesTable(data.devices);
+        renderTopStats(data);
+
+        updateTime();
+
+        // Charts
+        if (data.vlans) {
+
+            data.vlans.forEach(v => {
+
+                if (!charts[v.id]) {
+                    buildVlanChart(v);
+
+                } else {
+
+                    updateChartsWithRealData(v.id,v.rx,v.tx);
+                }
+            });
+        }
+
+        // Logs
+        if (data.logs) {
+            renderRealLogs(data.logs);
+        }
+
+        console.log("Dashboard sincronizado!");
+
+    } catch (error) {
+
+        console.error(
+            "Erro na sincronização:",
+            error
+        );
+
+        alert(
+            "Falha ao conectar no backend.\n" +
+            "Verifique se o FastAPI está rodando."
+        );
+
+    } finally {
+
+        if (btn) {
+            btn.innerText = "↻ Atualizar";
+        }
+    }
+}
+
+function renderVpn(vpn) {
+
+    const online = vpn.status === 'online';
+
+    document.getElementById('vpnBadge').className =
+        online
+            ? 'badge-online'
+            : 'badge-offline';
+
+    document.getElementById('vpnBadge').textContent =
+        online
+            ? '● Online'
+            : '○ Offline';
+
+    document.getElementById('vpnIp').textContent =
+        vpn.tunnelIp || '—';
+
+    document.getElementById('vpnEndpoint').textContent =
+        vpn.endpoint || 'N/A';
+
+    document.getElementById('vpnHandshake').textContent =
+        vpn.lastHandshake
+            ? `${vpn.lastHandshake}s atrás`
+            : 'Sem handshake';
+
+    document.getElementById('vpnPeers').textContent =
+        vpn.peers != null
+            ? `${vpn.peers} peer(s)`
+            : '—';
+
+    document.getElementById('vpnRx').textContent =
+        vpn.rxBytes || '—';
+
+    document.getElementById('vpnTx').textContent =
+        vpn.txBytes || '—';
+}
+
+
+</script>
+
+</body>
+
+</html>
